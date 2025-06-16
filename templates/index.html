@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Upload Image for Prediction</h2>
+    <input type="file" id="imageInput" accept="image/*"><br><br>
+    <button onclick="uploadImage()">Predict</button>
+    <div id="output" class="result"></div>
+    <canvas id="previewCanvas" width="140" height="140"></canvas>
+</div>
+
+<script>
+    function uploadImage() {
+        const fileInput = document.getElementById("imageInput");
+        const output = document.getElementById("output");
+
+        if (fileInput.files.length === 0) {
+            output.innerHTML = "❌ Please select an image.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("image", fileInput.files[0]);
+
+        // Preview on canvas
+        const ctx = document.getElementById('previewCanvas').getContext('2d');
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0, 140, 140);
+        img.src = URL.createObjectURL(fileInput.files[0]);
+
+        fetch("/predict", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.prediction !== undefined) {
+                output.innerHTML = "✅ Prediction: " + data.prediction;
+            } else {
+                output.innerHTML = "❌ Error: " + data.error;
+            }
+        })
+        .catch(err => {
+            output.innerHTML = "❌ JS Error: " + err.message;
+        });
+    }
+</script>
+</body>
+</html>
